@@ -1,0 +1,44 @@
+version: "3.9"
+services:
+#  streamer:
+#    build:
+#      context: ./scripts
+#    networks:
+#      - rtmp_network
+  rtmp_server:
+    build:
+      context: ./nginx
+    networks:
+      - rtmp_network
+    ports:
+      - "1935:1935"
+  path_tracer:
+    command:
+      - "../../scenes/san_miguel.txt"
+    build:
+      context: .
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      - /dev/input:/dev/input:rw
+      - /var/tmp/OptixCache_root:/var/tmp/OptixCache_root
+      - ./scenes:/app/scenes:ro
+      - ./models:/app/models:ro
+      - ./frames:/app/frames
+
+    environment:
+      DISPLAY:
+    depends_on:
+#      - streamer
+      - rtmp_server
+    networks:
+      - rtmp_network
+
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [ gpu ]
+networks:
+  rtmp_network:
